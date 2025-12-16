@@ -1,0 +1,126 @@
+{% extends 'inventory/base.html' %}
+
+{% block title %}Customers - Door Shop{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Customers</h2>
+    <a href="{% url 'customer_add' %}" class="btn btn-primary">Add New Customer</a>
+</div>
+
+<!-- Search and Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-6">
+                <input type="text" name="q" class="form-control" placeholder="Search customers by name, phone, or email..." value="{{ request.GET.q }}">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-outline-primary w-100">Search</button>
+            </div>
+            <div class="col-md-2">
+                <a href="{% url 'customer_list' %}" class="btn btn-outline-secondary w-100">Clear</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Customers Table -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>Email</th>
+                        <th>Address</th>
+                        <th>Total Purchases</th>
+                        <th>Total Spent</th>
+                        <th>Last Purchase</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for customer in customers %}
+                    <tr>
+                        <td>
+                            <strong>{{ customer.name }}</strong>
+                        </td>
+                        <td>{{ customer.phone|default:"-" }}</td>
+                        <td>{{ customer.email|default:"-" }}</td>
+                        <td>
+                            {% if customer.address %}
+                                <span title="{{ customer.address }}">
+                                    {{ customer.address|truncatewords:5 }}
+                                </span>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-primary">{{ customer.sales_count }}</span>
+                        </td>
+                        <td>
+                            {% if customer.total_spent > 0 %}
+                                <strong>${{ customer.total_spent|floatformat:2 }}</strong>
+                            {% else %}
+                                <span class="text-muted">$0.00</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if customer.last_purchase %}
+                                {{ customer.last_purchase.sale_date|date:"M d, Y" }}
+                            {% else %}
+                                <span class="text-muted">Never</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'customer_edit' customer.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                            {% if customer.sales_count > 0 %}
+                            <a href="{% url 'customer_sales' customer.pk %}" class="btn btn-sm btn-outline-info">Sales</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-4">
+                            <div class="text-muted">
+                                <h5>No customers found</h5>
+                                <p>Get started by adding your first customer.</p>
+                                <a href="{% url 'customer_add' %}" class="btn btn-primary">Add Customer</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Summary -->
+        {% if customers %}
+        <div class="mt-4 p-3 bg-light rounded">
+            <div class="row text-center">
+                <div class="col-md-3">
+                    <h4>{{ customers.count }}</h4>
+                    <p class="text-muted mb-0">Total Customers</p>
+                </div>
+                <div class="col-md-3">
+                    <h4>{{ active_customers }}</h4>
+                    <p class="text-muted mb-0">Active Customers</p>
+                </div>
+                <div class="col-md-3">
+                    <h4>${{ total_revenue|floatformat:2 }}</h4>
+                    <p class="text-muted mb-0">Total Revenue</p>
+                </div>
+                <div class="col-md-3">
+                    <h4>${{ avg_spent|floatformat:2 }}</h4>
+                    <p class="text-muted mb-0">Avg per Customer</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

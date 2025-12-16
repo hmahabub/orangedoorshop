@@ -1,0 +1,183 @@
+{% extends 'inventory/base.html' %}
+
+{% block title %}Profit & Loss Report - Door Shop{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Profit & Loss Report</h2>
+    <div>
+        <a href="{% url 'reports_dashboard' %}" class="btn btn-secondary">Back to Reports</a>
+    </div>
+</div>
+
+<!-- Date Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label for="start_date" class="form-label">Start Date</label>
+                <input type="date" name="start_date" class="form-control" value="{{ start_date|date:'Y-m-d' }}">
+            </div>
+            <div class="col-md-4">
+                <label for="end_date" class="form-label">End Date</label>
+                <input type="date" name="end_date" class="form-control" value="{{ end_date|date:'Y-m-d' }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">&nbsp;</label>
+                <button type="submit" class="btn btn-primary w-100">Generate Report</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h4 class="card-title">${{ total_sales|floatformat:2 }}</h4>
+                <p class="card-text">Total Sales</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <h4 class="card-title">${{ total_cost|floatformat:2 }}</h4>
+                <p class="card-text">Total Cost</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h4 class="card-title">${{ total_profit|floatformat:2 }}</h4>
+                <p class="card-text">Total Profit</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h4 class="card-title">{{ profit_margin|floatformat:2 }}%</h4>
+                <p class="card-text">Profit Margin</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Method Breakdown -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Sales by Payment Method</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Cash
+                        <span class="badge bg-primary rounded-pill">${{ payment_methods.cash|floatformat:2 }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Card
+                        <span class="badge bg-primary rounded-pill">${{ payment_methods.card|floatformat:2 }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Mobile Banking
+                        <span class="badge bg-primary rounded-pill">${{ payment_methods.mobile|floatformat:2 }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Customer Due
+                        <span class="badge bg-primary rounded-pill">${{ payment_methods.due|floatformat:2 }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Financial Summary</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr>
+                        <td>Total Revenue:</td>
+                        <td class="text-end">${{ total_sales|floatformat:2 }}</td>
+                    </tr>
+                    <tr>
+                        <td>Total Cost of Goods:</td>
+                        <td class="text-end">${{ total_cost|floatformat:2 }}</td>
+                    </tr>
+                    <tr>
+                        <td>Total Discounts:</td>
+                        <td class="text-end">${{ total_discount|floatformat:2 }}</td>
+                    </tr>
+                    <tr class="table-success">
+                        <td><strong>Gross Profit:</strong></td>
+                        <td class="text-end"><strong>${{ total_profit|floatformat:2 }}</strong></td>
+                    </tr>
+                    <tr class="table-info">
+                        <td><strong>Profit Margin:</strong></td>
+                        <td class="text-end"><strong>{{ profit_margin|floatformat:2 }}%</strong></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sales List -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Sales Transactions ({{ start_date }} to {{ end_date }})</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Sale ID</th>
+                        <th>Date</th>
+                        <th>Customer</th>
+                        <th>Total Amount</th>
+                        <th>Discount</th>
+                        <th>Payment Method</th>
+                        <th>Profit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sale in sales %}
+                    <tr>
+                        <td>#{{ sale.id }}</td>
+                        <td>{{ sale.sale_date|date:'M d, Y H:i' }}</td>
+                        <td>{{ sale.customer.name|default:"Walk-in" }}</td>
+                        <td>${{ sale.grand_total|floatformat:2 }}</td>
+                        <td>${{ sale.discount_amount|floatformat:2 }}</td>
+                        <td>
+                            <span class="badge bg-secondary">{{ sale.get_payment_method_display }}</span>
+                        </td>
+                        <td>
+                            {% with sale_profit=0 %}
+                            {% for item in sale.items.all %}
+                            {% with item_profit=item.total_price|floatformat:2 item_cost=item.product.cost_price|floatformat:2 %}
+                            {% widthratio item_profit item_cost 100 as item_profit_percent %}
+                            {% endwith %}
+                            {% endfor %}
+                            
+                            <span class="badge bg-success">${{ sale_profit|floatformat:2 }}</span>
+                            {% endwith %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center">No sales found for the selected period.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

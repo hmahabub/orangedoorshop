@@ -1,0 +1,176 @@
+{% extends 'inventory/base.html' %}
+
+{% block title %}Inventory Dashboard - Door Shop{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2>Inventory Dashboard</h2>
+        <p class="text-muted">Overview of your inventory management</p>
+    </div>
+</div>
+
+<!-- Quick Stats -->
+<div class="row mt-4">
+    <div class="col-md-3 mb-4">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ total_products }}</h4>
+                        <p class="card-text">Total Products</p>
+                    </div>
+                    <div style="font-size: 2rem;">📦</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ total_suppliers }}</h4>
+                        <p class="card-text">Suppliers</p>
+                    </div>
+                    <div style="font-size: 2rem;">🏢</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ low_stock_products }}</h4>
+                        <p class="card-text">Low Stock Items</p>
+                    </div>
+                    <div style="font-size: 2rem;">⚠️</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ total_customers }}</h4>
+                        <p class="card-text">Customers</p>
+                    </div>
+                    <div style="font-size: 2rem;">👥</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <a href="{% url 'product_add' %}" class="btn btn-primary w-100 mb-2">
+                            ➕ Add Product
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="{% url 'purchase_create' %}" class="btn btn-success w-100 mb-2">
+                            📥 New Purchase
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="{% url 'supplier_add' %}" class="btn btn-info w-100 mb-2">
+                            🏢 Add Supplier
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="{% url 'customer_add' %}" class="btn btn-warning w-100 mb-2">
+                            👥 Add Customer
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0">Recent Purchases</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_purchases %}
+                    <div class="list-group">
+                        {% for purchase in recent_purchases %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">PO #{{ purchase.id }}</h6>
+                                <small>{{ purchase.order_date|timesince }} ago</small>
+                            </div>
+                            <p class="mb-1">Supplier: {{ purchase.supplier.name }}</p>
+                            <small>Amount: ${{ purchase.total_amount|floatformat:2 }}</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted mb-0">No recent purchases.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Low Stock Alerts -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="card-title mb-0">⚠️ Low Stock Alerts</h5>
+            </div>
+            <div class="card-body">
+                {% if low_stock_alerts %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Product Name</th>
+                                    <th>Category</th>
+                                    <th>Current Stock</th>
+                                    <th>Min Stock Level</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for product in low_stock_alerts %}
+                                <tr>
+                                    <td>{{ product.name }}</td>
+                                    <td>{{ product.category.name }}</td>
+                                    <td>{{ product.current_stock }}</td>
+                                    <td>{{ product.min_stock_level }}</td>
+                                    <td>
+                                        <span class="badge bg-danger">Low Stock</span>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'purchase_create' %}" class="btn btn-sm btn-outline-primary">Order More</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted mb-0">No low stock alerts. All products are well stocked! 🎉</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,171 @@
+{% extends 'inventory/base.html' %}
+
+{% block title %}Stock Adjustments - Door Shop{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Stock Adjustments</h2>
+    <a href="{% url 'stock_adjustment_create' %}" class="btn btn-primary">New Stock Adjustment</a>
+</div>
+
+<!-- Quick Stats -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ adjustments.count }}</h4>
+                        <p class="card-text">Total Adjustments</p>
+                    </div>
+                    <div style="font-size: 2rem;">📊</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ stock_in_count }}</h4>
+                        <p class="card-text">Stock In</p>
+                    </div>
+                    <div style="font-size: 2rem;">📥</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ stock_out_count }}</h4>
+                        <p class="card-text">Stock Out</p>
+                    </div>
+                    <div style="font-size: 2rem;">📤</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ adjustment_count }}</h4>
+                        <p class="card-text">Adjustments</p>
+                    </div>
+                    <div style="font-size: 2rem;">⚙️</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stock Adjustments Table -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Product</th>
+                        <th>Type</th>
+                        <th>Quantity</th>
+                        <th>Reason</th>
+                        <th>User</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for adjustment in adjustments %}
+                    <tr>
+                        <td>{{ adjustment.created_at|date:"M d, Y H:i" }}</td>
+                        <td>
+                            <strong>{{ adjustment.product.name }}</strong>
+                            <br>
+                            <small class="text-muted">{{ adjustment.product.category.name }}</small>
+                        </td>
+                        <td>
+                            {% if adjustment.adjustment_type == 'in' %}
+                                <span class="badge bg-success">Stock In</span>
+                            {% elif adjustment.adjustment_type == 'out' %}
+                                <span class="badge bg-warning">Stock Out</span>
+                            {% elif adjustment.adjustment_type == 'adjust' %}
+                                <span class="badge bg-info">Adjustment</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if adjustment.adjustment_type == 'in' %}
+                                <span class="text-success">+{{ adjustment.quantity }}</span>
+                            {% elif adjustment.adjustment_type == 'out' %}
+                                <span class="text-danger">-{{ adjustment.quantity }}</span>
+                            {% else %}
+                                <span class="text-info">{{ adjustment.quantity }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ adjustment.reason }}</td>
+                        <td>{{ adjustment.created_by.username }}</td>
+                        <td>
+                            {% if adjustment.notes %}
+                                <span title="{{ adjustment.notes }}">
+                                    {{ adjustment.notes|truncatewords:5 }}
+                                </span>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4">
+                            <div class="text-muted">
+                                <h5>No stock adjustments found</h5>
+                                <p>Stock adjustments help you track inventory changes outside of sales and purchases.</p>
+                                <a href="{% url 'stock_adjustment_create' %}" class="btn btn-primary">Create Adjustment</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Recent Stock Changes Summary -->
+        {% if adjustments %}
+        <div class="mt-4">
+            <h6>Recent Stock Changes Summary</h6>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h5 class="text-success">+{{ total_stock_in }}</h5>
+                            <p class="mb-0">Total Stock Added</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h5 class="text-danger">-{{ total_stock_out }}</h5>
+                            <p class="mb-0">Total Stock Removed</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h5 class="text-primary">{{ net_change }}</h5>
+                            <p class="mb-0">Net Change</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

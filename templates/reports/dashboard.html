@@ -1,0 +1,101 @@
+{% extends 'inventory/base.html' %}
+
+{% block title %}Reports - Door Shop{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2>Reports Dashboard</h2>
+        <p class="text-muted">Generate and view various business reports</p>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <!-- Sales Reports -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Sales Reports</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <a href="{% url 'sales_report' %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">Sales Report</h6>
+                        </div>
+                        <p class="mb-1">Detailed sales analysis by date range</p>
+                    </a>
+                    <a href="{% url 'profit_calculation_report' %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">Profit & Loss Report</h6>
+                        </div>
+                        <p class="mb-1">Calculate profit margins and business performance</p>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventory Reports -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Inventory Reports</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <a href="{% url 'stock_valuation_report' %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">Stock Valuation</h6>
+                        </div>
+                        <p class="mb-1">Current inventory value and stock levels</p>
+                    </a>
+                    <a href="{% url 'low_stock_report' %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">Low Stock Alert</h6>
+                        </div>
+                        <p class="mb-1">Products that need restocking</p>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer & Supplier Reports -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Customer Reports</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <a href="{% url 'customer_report' %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">Customer Analysis</h6>
+                        </div>
+                        <p class="mb-1">Customer spending and purchase history</p>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Supplier Reports</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <a href="{% url 'supplier_report' %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">Supplier Analysis</h6>
+                        </div>
+                        <p class="mb-1">Supplier performance and purchase history</p>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

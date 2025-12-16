@@ -1,0 +1,107 @@
+{% extends 'inventory/base.html' %}
+
+{% block title %}Supplier Report - Door Shop{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Supplier Report</h2>
+    <a href="{% url 'reports_dashboard' %}" class="btn btn-secondary">Back to Reports</a>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h4 class="card-title">{{ total_suppliers }}</h4>
+                <p class="card-text">Total Suppliers</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h4 class="card-title">{{ active_suppliers }}</h4>
+                <p class="card-text">Active Suppliers</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <h4 class="card-title">${{ total_purchase_value|floatformat:2 }}</h4>
+                <p class="card-text">Total Purchase Value</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Suppliers List -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Suppliers Overview</h5>
+    </div>
+    <div class="card-body">
+        {% if suppliers %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Supplier Name</th>
+                        <th>Contact</th>
+                        <th>Purchase Orders</th>
+                        <th>Total Purchases</th>
+                        <th>Last Purchase</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for supplier in suppliers %}
+                    <tr>
+                        <td>
+                            <strong>{{ supplier.name }}</strong>
+                            {% if supplier.contact_person %}
+                                <br><small class="text-muted">Contact: {{ supplier.contact_person }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if supplier.phone %}{{ supplier.phone }}<br>{% endif %}
+                            {% if supplier.email %}<small>{{ supplier.email }}</small>{% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-primary">{{ supplier.purchase_count }}</span>
+                        </td>
+                        <td>
+                            {% if supplier.total_purchases > 0 %}
+                                <strong>${{ supplier.total_purchases|floatformat:2 }}</strong>
+                            {% else %}
+                                <span class="text-muted">$0.00</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if supplier.last_purchase %}
+                                {{ supplier.last_purchase.order_date|date:"M d, Y" }}
+                            {% else %}
+                                <span class="text-muted">No purchases</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if supplier.purchase_count > 0 %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <p class="text-muted">No suppliers found.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

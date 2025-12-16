@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receipt - Sale #{{ sale.id }}</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-width: 80mm;
+            margin: 0 auto;
+            padding: 10px;
+        }
+        .receipt-header {
+            text-align: center;
+            border-bottom: 1px dashed #000;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+        .receipt-footer {
+            text-align: center;
+            border-top: 1px dashed #000;
+            padding-top: 10px;
+            margin-top: 10px;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .text-right {
+            text-align: right;
+        }
+        .bold {
+            font-weight: bold;
+        }
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        .total-row {
+            border-top: 1px solid #000;
+            padding-top: 5px;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+        @media print {
+            body {
+                width: 80mm;
+            }
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="receipt-header">
+        <h2>Orange Door Shop</h2>
+        <p>13, Agrabad Access Road</p>
+        <p>Boropol, Halishaha, CTG</p>
+        <p>Phone: 01716-482297</p>
+        <p>Receipt #: {{ sale.id }}</p>
+        <p>Date: {{ sale.sale_date|date:"M d, Y H:i" }}</p>
+    </div>
+
+    <div class="receipt-body">
+        {% if sale.customer %}
+        <div class="item-row">
+            <span>Customer:</span>
+            <span>{{ sale.customer.name }}</span>
+        </div>
+        {% endif %}
+        
+        <div class="item-row">
+            <span>Salesperson:</span>
+            <span>{{ sale.sale_person.username }}</span>
+        </div>
+
+        <hr style="border-top: 1px dashed #000; margin: 10px 0;">
+
+        <div class="bold">ITEMS SOLD:</div>
+        
+        {% for item in sale.items.all %}
+        <div class="item-row">
+            <div style="flex: 2;">
+                {{ item.product.name }}
+            </div>
+            <div style="flex: 1; text-align: right;">
+                {{ item.quantity }} x ৳{{ item.unit_price }}
+            </div>
+            <div style="flex: 1; text-align: right;">
+                ৳{{ item.total_price }}
+            </div>
+        </div>
+        {% endfor %}
+
+        <hr style="border-top: 1px dashed #000; margin: 10px 0;">
+
+        <div class="item-row">
+            <span>Subtotal:</span>
+            <span>৳{{ sale.total_amount }}</span>
+        </div>
+
+        {% if sale.discount_amount > 0 %}
+        <div class="item-row">
+            <span>Discount:</span>
+            <span>-৳{{ sale.discount_amount }}</span>
+        </div>
+        {% endif %}
+
+        {% if sale.tax_amount > 0 %}
+        <div class="item-row">
+            <span>Tax:</span>
+            <span>৳{{ sale.tax_amount }}</span>
+        </div>
+        {% endif %}
+
+        <div class="item-row total-row">
+            <span class="bold">TOTAL:</span>
+            <span class="bold">৳{{ sale.grand_total }}</span>
+        </div>
+
+        <div class="item-row">
+            <span>Payment Method:</span>
+            <span>{{ sale.get_payment_method_display }}</span>
+        </div>
+
+        {% if sale.payment_method != 'due' %}
+        <div class="item-row">
+            <span>Amount Received:</span>
+            <span>৳{{ sale.payment_received }}</span>
+        </div>
+        <div class="item-row">
+            <span>Change Given:</span>
+            <span>৳{{ sale.change_given }}</span>
+        </div>
+        {% else %}
+        <div class="item-row">
+            <span class="bold">STATUS:</span>
+            <span class="bold">CUSTOMER DUE</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="receipt-footer">
+        <p>Thank you for your business!</p>
+        <p>** Please keep this receipt for returns **</p>
+        <p>Generated on: {% now "M d, Y H:i" %}</p>
+    </div>
+
+    <div class="no-print" style="margin-top: 20px; text-align: center;">
+        <button onclick="window.print()" class="btn btn-primary">Print Receipt</button>
+        <button onclick="window.close()" class="btn btn-secondary">Close</button>
+    </div>
+
+    <script>
+        // Auto-print when the page loads
+        window.onload = function() {
+            setTimeout(function() {
+                window.print();
+            }, 500);
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,214 @@
+{% extends 'inventory/base.html' %}
+
+{% block title %}Sales Report - Door Shop{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Sales Report</h2>
+    <a href="{% url 'reports_dashboard' %}" class="btn btn-secondary">Back to Reports</a>
+</div>
+
+<!-- Date Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label for="start_date" class="form-label">Start Date</label>
+                <input type="date" name="start_date" class="form-control" value="{{ start_date|date:'Y-m-d' }}">
+            </div>
+            <div class="col-md-4">
+                <label for="end_date" class="form-label">End Date</label>
+                <input type="date" name="end_date" class="form-control" value="{{ end_date|date:'Y-m-d' }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">&nbsp;</label>
+                <button type="submit" class="btn btn-primary w-100">Generate Report</button>
+            </div>
+        </form>
+        <div class="mt-2 text-center">
+            <small class="text-muted">
+                Quick links: 
+                <a href="?start_date={% now 'Y-m-d' %}&end_date={% now 'Y-m-d' %}">Today</a> | 
+                <a href="?start_date={% now 'Y-m-d' %}&end_date={% now 'Y-m-d' %}">This Week</a> | 
+                <a href="?start_date={% now 'Y-m-d' %}&end_date={% now 'Y-m-d' %}">This Month</a>
+            </small>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h4 class="card-title">${{ total_sales|floatformat:2 }}</h4>
+                <p class="card-text">Total Sales</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h4 class="card-title">{{ total_transactions }}</h4>
+                <p class="card-text">Transactions</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <h4 class="card-title">${{ avg_sale_value|floatformat:2 }}</h4>
+                <p class="card-text">Average Sale</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h4 class="card-title">{{ daily_summaries|length }}</h4>
+                <p class="card-text">Days</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Daily Sales Breakdown -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Daily Sales Breakdown</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Transactions</th>
+                                <th>Total Sales</th>
+                                <th>Average</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for day in daily_summaries %}
+                            <tr>
+                                <td>{{ day.date|date:"M d, Y" }}</td>
+                                <td>{{ day.sale_count }}</td>
+                                <td>${{ day.total_sales|floatformat:2 }}</td>
+                                <td>
+                                    {% if day.sale_count > 0 %}
+                                        ${{ day.total_sales|floatformat:2 }}
+                                    {% else %}
+                                        $0.00
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Products -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Top Selling Products</h5>
+            </div>
+            <div class="card-body">
+                {% if top_products %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Category</th>
+                                <th>Quantity</th>
+                                <th>Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in top_products %}
+                            <tr>
+                                <td>{{ product.product__name }}</td>
+                                <td>{{ product.product__category__name }}</td>
+                                <td>{{ product.total_quantity }}</td>
+                                <td>${{ product.total_revenue|floatformat:2 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center">No sales data available for the selected period.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sales Transactions -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            Sales Transactions ({{ start_date }} to {{ end_date }})
+            {% if sales %} - {{ sales.count }} transactions{% endif %}
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if sales %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Sale ID</th>
+                        <th>Date & Time</th>
+                        <th>Customer</th>
+                        <th>Items</th>
+                        <th>Total Amount</th>
+                        <th>Discount</th>
+                        <th>Payment Method</th>
+                        <th>Salesperson</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sale in sales %}
+                    <tr>
+                        <td>#{{ sale.id }}</td>
+                        <td>{{ sale.sale_date|date:"M d, Y H:i" }}</td>
+                        <td>{{ sale.customer.name|default:"Walk-in" }}</td>
+                        <td>
+                            {% for item in sale.items.all %}
+                            <span class="badge bg-light text-dark mb-1">
+                                {{ item.product.name }} ({{ item.quantity }})
+                            </span>
+                            {% endfor %}
+                        </td>
+                        <td><strong>${{ sale.grand_total|floatformat:2 }}</strong></td>
+                        <td>
+                            {% if sale.discount_amount > 0 %}
+                            <span class="text-warning">-${{ sale.discount_amount|floatformat:2 }}</span>
+                            {% else %}
+                            <span class="text-muted">$0.00</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">{{ sale.get_payment_method_display }}</span>
+                        </td>
+                        <td>{{ sale.sale_person.username }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <p class="text-muted">No sales found for the selected period.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

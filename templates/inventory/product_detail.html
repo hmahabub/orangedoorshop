@@ -1,0 +1,146 @@
+{% extends 'inventory/base.html' %}
+
+{% block title %}{{ product.name }} - Door Shop{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>{{ product.name }}</h2>
+    <div>
+        <a href="{% url 'product_edit' product.pk %}" class="btn btn-secondary">Edit</a>
+        <a href="{% url 'product_list' %}" class="btn btn-primary">Back to Products</a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Product Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <th>Name:</th>
+                                <td>{{ product.name }}</td>
+                            </tr>
+                            <tr>
+                                <th>Category:</th>
+                                <td>{{ product.category.name }}</td>
+                            </tr>
+                            <tr>
+                                <th>Type:</th>
+                                <td>{{ product.get_product_type_display }}</td>
+                            </tr>
+                            <tr>
+                                <th>Material:</th>
+                                <td>{{ product.material|default:"-" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Supplier:</th>
+                                <td>{{ product.supplier_name|default:"-" }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <th>Cost Price:</th>
+                                <td>Tk. {{ product.cost_price }}</td>
+                            </tr>
+                            <tr>
+                                <th>Selling Price:</th>
+                                <td>Tk. {{ product.selling_price }}</td>
+                            </tr>
+                            <tr>
+                                <th>Profit Margin:</th>
+                                <td>{{ product.profit_margin|floatformat:2 }}%</td>
+                            </tr>
+                            <tr>
+                                <th>Track Stock:</th>
+                                <td>{{ product.track_stock|yesno:"Yes,No" }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                {% if product.width and product.height %}
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <h6>Dimensions</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <th>Width:</th>
+                                <td>{{ product.width }}"</td>
+                                <th>Height:</th>
+                                <td>{{ product.height }}"</td>
+                                {% if product.thickness %}
+                                <th>Thickness:</th>
+                                <td>{{ product.thickness }}"</td>
+                                {% endif %}
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if product.description %}
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <h6>Description</h6>
+                        <p>{{ product.description }}</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Stock Information</h5>
+            </div>
+            <div class="card-body text-center">
+                {% if product.track_stock %}
+                    <h3 class="{% if product.current_stock <= product.min_stock_level %}text-danger{% else %}text-success{% endif %}">
+                        {{ product.current_stock }}
+                    </h3>
+                    <p>Current Stock</p>
+                    
+                    <div class="mt-4">
+                        <p>Minimum Stock Level: {{ product.min_stock_level }}</p>
+                        <p>Stock Value: Tk.{{ product.stock_value|floatformat:2 }}</p>
+                    </div>
+
+                    {% if product.current_stock <= product.min_stock_level %}
+                    <div class="alert alert-warning mt-3">
+                        <strong>Low Stock Alert!</strong> This product needs restocking.
+                    </div>
+                    {% endif %}
+                {% else %}
+                    <h3 class="text-muted">N/A</h3>
+                    <p>Stock tracking disabled</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'stock_adjustment_create' %}?product={{ product.id }}" class="btn btn-outline-primary">
+                        Adjust Stock
+                    </a>
+                    <a href="{% url 'pos_dashboard' %}" class="btn btn-outline-success">
+                        Sell This Product
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

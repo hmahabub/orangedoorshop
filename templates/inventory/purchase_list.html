@@ -1,0 +1,131 @@
+{% extends 'inventory/base.html' %}
+
+{% block title %}Purchase Orders - Door Shop{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Purchase Orders</h2>
+    <a href="{% url 'purchase_create' %}" class="btn btn-primary">Create Purchase Order</a>
+</div>
+
+<!-- Status Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <select name="status" class="form-select" onchange="window.location.href = '?status=' + this.value">
+                    <option value="">All Statuses</option>
+                    {% for status_code, status_name in status_choices %}
+                    <option value="{{ status_code }}" {% if request.GET.status == status_code %}selected{% endif %}>
+                        {{ status_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-9 text-end">
+                <div class="btn-group">
+                    <a href="?status=pending" class="btn btn-outline-warning">Pending</a>
+                    <a href="?status=received" class="btn btn-outline-success">Received</a>
+                    <a href="?status=cancelled" class="btn btn-outline-danger">Cancelled</a>
+                    <a href="{% url 'purchase_list' %}" class="btn btn-outline-secondary">Clear</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Purchase Orders Table -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>PO #</th>
+                        <th>Supplier</th>
+                        <th>Order Date</th>
+                        <th>Expected Date</th>
+                        <th>Status</th>
+                        <th>Total Amount</th>
+                        <th>Items</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for purchase in purchases %}
+                    <tr>
+                        <td>
+                            <strong>#{{ purchase.id }}</strong>
+                        </td>
+                        <td>{{ purchase.supplier.name }}</td>
+                        <td>{{ purchase.order_date|date:"M d, Y" }}</td>
+                        <td>
+                            {% if purchase.expected_date %}
+                                {{ purchase.expected_date|date:"M d, Y" }}
+                            {% else %}
+                                <span class="text-muted">Not set</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if purchase.status == 'pending' %}
+                                <span class="badge bg-warning">Pending</span>
+                            {% elif purchase.status == 'received' %}
+                                <span class="badge bg-success">Received</span>
+                            {% elif purchase.status == 'cancelled' %}
+                                <span class="badge bg-danger">Cancelled</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <strong>${{ purchase.total_amount|floatformat:2 }}</strong>
+                        </td>
+                        <td>
+                            {{ purchase.items.count }} items
+                        </td>
+                        <td>
+                            <a href="{% url 'purchase_detail' purchase.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                            {% if purchase.status == 'pending' %}
+                                <a href="{% url 'purchase_receive' purchase.pk %}" class="btn btn-sm btn-outline-success">Receive</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-4">
+                            <div class="text-muted">
+                                <h5>No purchase orders found</h5>
+                                <p>Get started by creating your first purchase order.</p>
+                                <a href="{% url 'purchase_create' %}" class="btn btn-primary">Create Purchase Order</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Summary Statistics -->
+        {% if purchases %}
+        <div class="mt-4 p-3 bg-light rounded">
+            <div class="row text-center">
+                <div class="col-md-3">
+                    <h4>{{ purchases.count }}</h4>
+                    <p class="text-muted mb-0">Total Orders</p>
+                </div>
+                <div class="col-md-3">
+                    <h4 class="text-warning">{{ pending_count }}</h4>
+                    <p class="text-muted mb-0">Pending</p>
+                </div>
+                <div class="col-md-3">
+                    <h4 class="text-success">{{ received_count }}</h4>
+                    <p class="text-muted mb-0">Received</p>
+                </div>
+                <div class="col-md-3">
+                    <h4>${{ total_amount|floatformat:2 }}</h4>
+                    <p class="text-muted mb-0">Total Value</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends 'inventory/base.html' %}
+
+{% block title %}{{ title }} - Door Shop{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">{{ title }}</h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.supplier.id_for_label }}" class="form-label">Supplier *</label>
+                                {{ form.supplier }}
+                                {% if form.supplier.errors %}
+                                <div class="text-danger">{{ form.supplier.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.expected_date.id_for_label }}" class="form-label">Expected Delivery Date</label>
+                                {{ form.expected_date }}
+                                {% if form.expected_date.errors %}
+                                <div class="text-danger">{{ form.expected_date.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
+                        {{ form.notes }}
+                        {% if form.notes.errors %}
+                        <div class="text-danger">{{ form.notes.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'purchase_list' %}" class="btn btn-secondary me-md-2">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Create Purchase Order</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Quick Tips -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <h6>💡 Purchase Order Tips</h6>
+                <ul class="mb-0">
+                    <li>After creating the PO, you can add items to it</li>
+                    <li>Mark the PO as "Received" when items arrive to update stock</li>
+                    <li>Use notes to track special instructions or terms</li>
+                    <li>Set expected dates to track delivery timelines</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add Bootstrap classes to form fields
+        const inputs = document.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            if (input.type !== 'checkbox' && input.type !== 'radio') {
+                input.classList.add('form-control');
+            }
+        });
+        
+        // Add form-select class to select elements
+        const selects = document.querySelectorAll('select');
+        selects.forEach(select => {
+            select.classList.add('form-select');
+        });
+        
+        // Set today as default for expected date if empty
+        const expectedDate = document.getElementById('id_expected_date');
+        if (expectedDate && !expectedDate.value) {
+            const today = new Date().toISOString().split('T')[0];
+            expectedDate.value = today;
+        }
+    });
+</script>
+{% endblock %}

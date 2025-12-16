@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ORANGE DOOR FURNITURE</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { margin: 0; padding: 0; font-family: Arial, sans-serif; overflow: hidden; }
+        .navbar { background: #2c3e50 !important; padding: 0.5rem 0; }
+        .navbar-brand { font-size: 1.1rem; }
+        .navbar-text { font-size: 0.9rem; }
+        .nav-link { padding: 0.4rem 0.8rem; font-size: 0.9rem; }
+        .pos-wrapper { display: flex; height: calc(100vh - 50px); margin-top: 50px; }
+        .left-panel { flex: 2; background: #ecf0f1; padding: 10px; overflow-y: auto; }
+        .right-panel { flex: 1.5; background: white; padding: 10px; overflow-y: auto; border-left: 2px solid #bdc3c7; }
+        .product-item { 
+            background: white; 
+            border: 2px solid #ddd; 
+            border-radius: 6px; 
+            padding: 10px; 
+            margin-bottom: 8px; 
+            cursor: pointer; 
+            transition: all 0.2s; 
+        }
+        .product-item:hover { border-color: #3498db; transform: scale(1.01); box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+        .product-item:active { transform: scale(0.99); }
+        .out-stock { opacity: 0.5; cursor: not-allowed; background: #f8d7da; }
+        .cart-row { 
+            background: #f8f9fa; 
+            padding: 8px; 
+            margin-bottom: 8px; 
+            border-radius: 5px; 
+            border: 1px solid #dee2e6; 
+            font-size: 0.9rem;
+        }
+        .qty-box { 
+            display: flex; 
+            align-items: center; 
+            gap: 3px;
+            background: white;
+            border: 1px solid #ced4da;
+            border-radius: 3px;
+            padding: 1px;
+        }
+        .qty-box button { 
+            border: none; 
+            background: #3498db; 
+            color: white; 
+            width: 24px; 
+            height: 24px; 
+            border-radius: 2px; 
+            cursor: pointer; 
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+        .qty-box button:hover { background: #2980b9; }
+        .qty-box input { 
+            width: 40px; 
+            text-align: center; 
+            border: none; 
+            font-weight: bold;
+            background: transparent;
+            font-size: 0.9rem;
+        }
+        .total-box { 
+            background: #e8f5e9; 
+            padding: 10px; 
+            border-radius: 6px; 
+            margin: 10px 0; 
+            font-size: 0.9rem;
+        }
+        .btn-complete { 
+            background: #27ae60; 
+            color: white; 
+            width: 100%; 
+            padding: 10px; 
+            font-size: 1rem; 
+            font-weight: bold; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            margin-bottom: 8px;
+        }
+        .btn-complete:hover { background: #229954; }
+        .btn-complete:disabled { background: #95a5a6; cursor: not-allowed; }
+        .btn-clear { 
+            background: #e74c3c; 
+            color: white; 
+            width: 100%; 
+            padding: 8px; 
+            font-size: 0.9rem;
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+        }
+        .btn-clear:hover { background: #c0392b; }
+        .customer-box { 
+            background: #d4edda; 
+            border: 2px solid #28a745; 
+            border-radius: 6px; 
+            padding: 8px; 
+            margin-bottom: 10px; 
+            font-size: 0.85rem;
+        }
+        .spinner-border-sm { width: 0.8rem; height: 0.8rem; border-width: 0.1em; }
+        h4 { font-size: 1.2rem; margin-bottom: 10px !important; }
+        h5 { font-size: 1.1rem; margin: 0; }
+        h6 { font-size: 0.95rem; margin: 0 0 3px 0; }
+        .form-control { 
+            padding: 0.3rem 0.5rem; 
+            font-size: 0.9rem; 
+            margin-bottom: 8px;
+        }
+        .mb-3 { margin-bottom: 10px !important; }
+        label { font-size: 0.9rem; margin-bottom: 3px; }
+        #cartList { min-height: 150px; max-height: 250px; }
+        .text-muted { font-size: 0.9rem; padding: 20px !important; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark fixed-top">
+        <div class="container-fluid d-flex justify-content-between align-items-center">
+            <span class="navbar-brand">ORANGE DOOR FURNITURE</span>
+            <span class="navbar-text text-white" id="clock"></span>
+            <div class="d-flex gap-1">
+                <a href="{% url 'dashboard' %}" class="nav-link">Dashboard</a>
+                <a href="{% url 'inventory_dashboard' %}" class="nav-link">Inventory</a>
+                <a href="{% url 'admin:logout' %}" class="nav-link">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="pos-wrapper">
+        <!-- LEFT: Products -->
+        <div class="left-panel">
+            <h4>Products Catalog</h4>
+            <input type="text" class="form-control" id="searchBox" placeholder="🔍 Search products...">
+            
+            <div id="productList">
+                {% for product in products %}
+                <div class="product-item {% if product.track_stock and product.current_stock <= 0 %}out-stock{% endif %}" 
+                     data-id="{{ product.id }}"
+                     data-name="{{ product.name|lower }}"
+                     data-price="{{ product.selling_price }}"
+                     data-stock="{% if product.track_stock %}{{ product.current_stock }}{% else %}9999{% endif %}"
+                     data-track-stock="{{ product.track_stock|lower }}"
+                     onclick="addToCart({{ product.id }}, '{{ product.name }}', {{ product.selling_price }}, {% if product.track_stock %}{{ product.current_stock }}{% else %}9999{% endif %})">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h6>{{ product.name }}</h6>
+                            <div style="color: #7f8c8d; font-size: 0.8rem;">
+                                {% if product.track_stock %}
+                                    Stock: {{ product.current_stock }}
+                                {% else %}
+                                    Stock: ∞
+                                {% endif %}
+                                | Price: ৳{{ product.selling_price }}
+                            </div>
+                        </div>
+                        <div style="font-size: 1.1rem; font-weight: bold; color: #27ae60;">
+                            ৳{{ product.selling_price }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- RIGHT: Cart -->
+        <div class="right-panel">
+            <h4>Shopping Cart</h4>
+
+            <!-- Customer -->
+            <div class="mb-3">
+                <label class="fw-bold">Customer Phone:</label>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="phoneInput" placeholder="Enter phone">
+                    <button class="btn btn-primary btn-sm" onclick="findCustomer()" id="findBtn">
+                        <span id="findBtnText">Find</span>
+                        <span id="findBtnSpinner" style="display: none;" class="spinner-border spinner-border-sm"></span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="customerInfo" style="display:none"></div>
+            <div id="newCustomerBox" style="display:none"></div>
+
+            <!-- Cart -->
+            <div style="min-height: 150px; max-height: 250px; overflow-y: auto; margin: 10px 0;">
+                <div id="cartList">
+                    <div class="text-center text-muted p-4">Cart is empty</div>
+                </div>
+            </div>
+
+            <!-- Totals -->
+            <div class="total-box">
+                <div class="d-flex justify-content-between mb-1">
+                    <span>Subtotal:</span>
+                    <strong id="subtotalDisplay">৳0.00</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-1">
+                    <span>Discount:</span>
+                    <input type="number" id="discountInput" value="0" min="0" step="0.01" style="width: 70px; text-align: right; padding: 2px; font-size: 0.9rem;">
+                </div>
+                <hr style="margin: 5px 0;">
+                <div class="d-flex justify-content-between">
+                    <h5>TOTAL:</h5>
+                    <h5 class="text-success" id="totalDisplay">৳0.00</h5>
+                </div>
+            </div>
+
+            <!-- Payment -->
+            <div class="mb-3">
+                <label class="fw-bold">Payment:</label>
+                <select class="form-control" id="paymentSelect" style="padding: 0.25rem 0.5rem;">
+                    <option value="cash">Cash</option>
+                    <option value="card">Card</option>
+                    <option value="mobile">Mobile Banking</option>
+                    <option value="due">Customer Due</option>
+                </select>
+            </div>
+
+            <div class="mb-3" id="receivedSection">
+                <label>Amount Received:</label>
+                <input type="number" class="form-control" id="receivedInput" value="0" min="0" step="0.01" style="padding: 0.25rem 0.5rem;">
+            </div>
+
+            <div class="d-flex justify-content-between mb-3 p-2 bg-light rounded">
+                <span>Change:</span>
+                <strong id="changeDisplay">৳0.00</strong>
+            </div>
+
+            <div class="mb-3">
+                <label>Notes (Optional):</label>
+                <textarea class="form-control" id="notesInput" rows="1" style="min-height: 40px; padding: 0.25rem 0.5rem;"></textarea>
+            </div>
+
+            <button class="btn-complete" onclick="completeSale()" id="completeBtn">
+                <span id="completeBtnText">✅ COMPLETE SALE</span>
+                <span id="completeBtnSpinner" style="display: none;" class="spinner-border spinner-border-sm"></span>
+            </button>
+            <button class="btn-clear" onclick="clearAll()">🗑️ Clear Cart</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Global Variables
+        let cartItems = [];
+        let selectedCustomer = null;
+
+        // Get CSRF Token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Initialize
+        window.onload = function() {
+            updateClock();
+            setInterval(updateClock, 1000);
+            
+            document.getElementById('searchBox').addEventListener('input', filterProducts);
+            document.getElementById('discountInput').addEventListener('input', calculateTotals);
+            document.getElementById('receivedInput').addEventListener('input', calculateChange);
+            document.getElementById('paymentSelect').addEventListener('change', handlePaymentMethod);
+            document.getElementById('phoneInput').addEventListener('keypress', function(e) {
+                if(e.key === 'Enter') findCustomer();
+            });
+        };
+
+        // Clock
+        function updateClock() {
+            document.getElementById('clock').textContent = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        }
+
+        // Filter Products
+        function filterProducts() {
+            const search = document.getElementById('searchBox').value.toLowerCase();
+            const products = document.querySelectorAll('.product-item');
+            
+            products.forEach(product => {
+                const name = product.getAttribute('data-name');
+                if(name.includes(search)) {
+                    product.style.display = '';
+                } else {
+                    product.style.display = 'none';
+                }
+            });
+        }
+
+        // Add to Cart
+        function addToCart(id, name, price, stock) {
+            if(stock <= 0) {
+                alert('Product is out of stock!');
+                return;
+            }
+
+            const existing = cartItems.find(item => item.id === id);
+            
+            if(existing) {
+                if(existing.qty >= stock) {
+                    alert('Not enough stock available!');
+                    return;
+                }
+                existing.qty++;
+            } else {
+                cartItems.push({
+                    id: id,
+                    name: name,
+                    price: parseFloat(price),
+                    qty: 1,
+                    maxStock: stock
+                });
+            }
+            
+            displayCart();
+        }
+
+        // Display Cart
+        function displayCart() {
+            const container = document.getElementById('cartList');
+            
+            if(cartItems.length === 0) {
+                container.innerHTML = '<div class="text-center text-muted p-4">Cart is empty</div>';
+                calculateTotals();
+                return;
+            }
+
+            container.innerHTML = '';
+            
+            cartItems.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'cart-row';
+                div.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="flex: 1;">
+                            <strong>${item.name}</strong><br>
+                            <small style="color: #7f8c8d;">৳${item.price.toFixed(2)} each</small>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div class="qty-box">
+                                <button onclick="changeQty(${index}, -1)">−</button>
+                                <input type="number" value="${item.qty}" min="1" max="${item.maxStock}" 
+                                       onchange="setQty(${index}, this.value)">
+                                <button onclick="changeQty(${index}, 1)">+</button>
+                            </div>
+                            <strong style="width: 60px; text-align: right; font-size: 0.9rem;">৳${(item.price * item.qty).toFixed(2)}</strong>
+                            <button onclick="removeItem(${index})" style="background: #e74c3c; color: white; border: none; border-radius: 3px; width: 26px; height: 26px; cursor: pointer; font-size: 0.9rem;">×</button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+
+            calculateTotals();
+        }
+
+        // Change Quantity
+        function changeQty(index, delta) {
+            const item = cartItems[index];
+            const newQty = item.qty + delta;
+
+            if(newQty < 1) {
+                removeItem(index);
+                return;
+            }
+
+            if(newQty > item.maxStock) {
+                alert(`Only ${item.maxStock} available!`);
+                return;
+            }
+
+            cartItems[index].qty = newQty;
+            displayCart();
+        }
+
+        // Set Quantity
+        function setQty(index, value) {
+            const qty = parseInt(value);
+            const item = cartItems[index];
+
+            if(isNaN(qty) || qty < 1) {
+                removeItem(index);
+                return;
+            }
+
+            if(qty > item.maxStock) {
+                alert(`Only ${item.maxStock} available!`);
+                cartItems[index].qty = item.maxStock;
+            } else {
+                cartItems[index].qty = qty;
+            }
+
+            displayCart();
+        }
+
+        // Remove Item
+        function removeItem(index) {
+            cartItems.splice(index, 1);
+            displayCart();
+        }
+
+        // Calculate Totals
+        function calculateTotals() {
+            let subtotal = 0;
+            cartItems.forEach(item => {
+                subtotal += item.price * item.qty;
+            });
+
+            const discount = parseFloat(document.getElementById('discountInput').value) || 0;
+            const total = Math.max(0, subtotal - discount );
+
+            document.getElementById('subtotalDisplay').textContent = '৳' + subtotal.toFixed(2);
+            document.getElementById('totalDisplay').textContent = '৳' + total.toFixed(2);
+
+            calculateChange();
+        }
+
+        // Calculate Change
+        function calculateChange() {
+            const paymentMethod = document.getElementById('paymentSelect').value;
+            if(paymentMethod === 'due') {
+                document.getElementById('changeDisplay').textContent = '৳0.00';
+                return;
+            }
+
+            const total = parseFloat(document.getElementById('totalDisplay').textContent.replace('৳', '')) || 0;
+            const received = parseFloat(document.getElementById('receivedInput').value) || 0;
+            const change = Math.max(0, received - total);
+            document.getElementById('changeDisplay').textContent = '৳' + change.toFixed(2);
+        }
+
+        // Handle Payment Method
+        function handlePaymentMethod() {
+            const paymentMethod = document.getElementById('paymentSelect').value;
+            const receivedSection = document.getElementById('receivedSection');
+            
+            if(paymentMethod === 'due') {
+                receivedSection.style.display = 'none';
+                document.getElementById('receivedInput').value = '0';
+            } else {
+                receivedSection.style.display = 'block';
+            }
+            calculateChange();
+        }
+
+        // Find Customer
+        async function findCustomer() {
+            const phone = document.getElementById('phoneInput').value.trim();
+            if(!phone) {
+                alert('Please enter phone number');
+                return;
+            }
+
+            // Show loading
+            document.getElementById('findBtnText').style.display = 'none';
+            document.getElementById('findBtnSpinner').style.display = 'inline-block';
+            document.getElementById('findBtn').disabled = true;
+
+            try {
+                const response = await fetch(`/pos/api/customer/by-phone/${encodeURIComponent(phone)}/`);
+                const result = await response.json();
+
+                if(result.success) {
+                    selectedCustomer = result.customer;
+                    showCustomer();
+                } else {
+                    showNewCustomerForm(phone);
+                }
+            } catch(error) {
+                console.error('Error finding customer:', error);
+                alert('Error finding customer. Please try again.');
+            } finally {
+                // Hide loading
+                document.getElementById('findBtnText').style.display = 'inline';
+                document.getElementById('findBtnSpinner').style.display = 'none';
+                document.getElementById('findBtn').disabled = false;
+            }
+        }
+
+        // Show Customer
+        function showCustomer() {
+            const box = document.getElementById('customerInfo');
+            box.className = 'customer-box';
+            box.style.display = 'block';
+            box.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: start;">
+                    <div>
+                        <strong style="font-size: 0.95rem;">${selectedCustomer.name}</strong><br>
+                        <small>📱 ${selectedCustomer.phone}</small><br>
+                        ${selectedCustomer.email ? '<small>📧 ' + selectedCustomer.email + '</small>' : ''}
+                        ${selectedCustomer.address ? '<br><small>📍 ' + selectedCustomer.address + '</small>' : ''}
+                    </div>
+                    <button onclick="clearCustomer()" style="border: none; background: none; font-size: 1.1rem; cursor: pointer; padding: 0; line-height: 1;">×</button>
+                </div>
+            `;
+            document.getElementById('newCustomerBox').style.display = 'none';
+        }
+
+        // Show New Customer Form
+        function showNewCustomerForm(phone) {
+            const box = document.getElementById('newCustomerBox');
+            box.style.display = 'block';
+            box.innerHTML = `
+                <div class="card mb-2">
+                    <div class="card-body p-2">
+                        <h6 class="mb-1">New Customer</h6>
+                        <input type="text" class="form-control form-control-sm mb-1" id="newName" placeholder="Name *">
+                        <input type="text" class="form-control form-control-sm mb-1" value="${phone}" disabled>
+                        <input type="email" class="form-control form-control-sm mb-1" id="newEmail" placeholder="Email (optional)">
+                        <textarea class="form-control form-control-sm mb-1" id="newAddress" rows="1" placeholder="Address (optional)" style="min-height: 40px;"></textarea>
+                        <div class="d-flex gap-1">
+                            <button class="btn btn-secondary btn-sm" onclick="cancelCustomer()">Cancel</button>
+                            <button class="btn btn-primary btn-sm" onclick="saveCustomer('${phone}')">Save</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('customerInfo').style.display = 'none';
+        }
+
+        // Save Customer
+        async function saveCustomer(phone) {
+            const name = document.getElementById('newName').value.trim();
+            if(!name) {
+                alert('Please enter customer name');
+                return;
+            }
+
+            const email = document.getElementById('newEmail').value.trim();
+            const address = document.getElementById('newAddress').value.trim();
+
+            try {
+                const response = await fetch('/pos/api/customer/search-create/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        phone: phone,
+                        name: name,
+                        email: email,
+                        address: address
+                    })
+                });
+
+                const result = await response.json();
+
+                if(result.success) {
+                    selectedCustomer = result.customer;
+                    showCustomer();
+                    alert('Customer saved successfully!');
+                } else {
+                    alert('Error saving customer: ' + result.error);
+                }
+            } catch(error) {
+                console.error('Error saving customer:', error);
+                alert('Error saving customer. Please try again.');
+            }
+        }
+
+        // Cancel Customer
+        function cancelCustomer() {
+            document.getElementById('newCustomerBox').style.display = 'none';
+            document.getElementById('phoneInput').value = '';
+        }
+
+        // Clear Customer
+        function clearCustomer() {
+            selectedCustomer = null;
+            document.getElementById('customerInfo').style.display = 'none';
+            document.getElementById('phoneInput').value = '';
+        }
+
+        // Complete Sale
+        async function completeSale() {
+            if(cartItems.length === 0) {
+                alert('Cart is empty!');
+                return;
+            }
+
+            const paymentMethod = document.getElementById('paymentSelect').value;
+            const total = parseFloat(document.getElementById('totalDisplay').textContent.replace('৳', ''));
+            const received = parseFloat(document.getElementById('receivedInput').value) || 0;
+
+            if(paymentMethod !== 'due' && received < total) {
+                alert('Amount received is less than total!');
+                return;
+            }
+
+            // Show loading
+            document.getElementById('completeBtnText').style.display = 'none';
+            document.getElementById('completeBtnSpinner').style.display = 'inline-block';
+            document.getElementById('completeBtn').disabled = true;
+
+            const saleData = {
+                customer_id: selectedCustomer ? selectedCustomer.id : null,
+                discount_amount: document.getElementById('discountInput').value,
+                payment_method: paymentMethod,
+                payment_received: paymentMethod === 'due' ? '0' : received.toString(),
+                notes: document.getElementById('notesInput').value,
+                items: cartItems.map(item => ({
+                    product_id: item.id,
+                    quantity: item.qty.toString(),
+                    unit_price: item.price.toString()
+                }))
+            };
+
+            try {
+                const response = await fetch('/pos/api/create-sale/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify(saleData)
+                });
+
+                const result = await response.json();
+
+                if(result.success) {
+                    // Redirect to receipt page
+                    window.location.href = `/pos/receipt/${result.sale_id}/`;
+                } else {
+                    alert('Error completing sale: ' + result.error);
+                    // Hide loading
+                    document.getElementById('completeBtnText').style.display = 'inline';
+                    document.getElementById('completeBtnSpinner').style.display = 'none';
+                    document.getElementById('completeBtn').disabled = false;
+                }
+            } catch(error) {
+                console.error('Error completing sale:', error);
+                alert('Error completing sale. Please try again.');
+                // Hide loading
+                document.getElementById('completeBtnText').style.display = 'inline';
+                document.getElementById('completeBtnSpinner').style.display = 'none';
+                document.getElementById('completeBtn').disabled = false;
+            }
+        }
+
+        // Clear All
+        function clearAll() {
+            if(cartItems.length === 0) return;
+            if(confirm('Clear cart?')) {
+                cartItems = [];
+                displayCart();
+            }
+        }
+    </script>
+</body>
+</html>
