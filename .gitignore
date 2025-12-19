@@ -1,0 +1,8 @@
+*.py[cod]
+*.pyo
+*.pyd
+*.sqlite3
+__pycache__/
+
+settings.py
+db.sqlite3
