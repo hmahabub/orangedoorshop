@@ -42,12 +42,12 @@ class Category(models.Model):
 
 class Product(models.Model):
     PRODUCT_TYPES = [
-        ('ready_made', 'Ready-made Door'),
-        ('custom', 'Custom Door'),
-        ('frame', 'Door Frame'),
+        ('main_door', 'Main Door'),
+        ('secondary_door', 'Secondary Door'),
         ('accessory', 'Accessory'),
         ('material', 'Raw Material'),
         ('service', 'Service/Labour'),
+        ('others', 'Others'),
     ]
 
     # Existing fields
