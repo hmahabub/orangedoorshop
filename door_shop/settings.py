@@ -25,7 +25,7 @@ SECRET_KEY = "django-insecure-0vb4z5e+6$rg-d_3f$rv4p_9ndos23n)u*x!nf-^!3fm5t8veb
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['*',
+ALLOWED_HOSTS = ['127.0.0.1',
         'orangedoorshop.com',
     'www.orangedoorshop.com',
 ]
@@ -82,7 +82,8 @@ WSGI_APPLICATION = "door_shop.wsgi.application"
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
-
+import os
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
